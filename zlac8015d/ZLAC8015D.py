@@ -1,5 +1,5 @@
 
-from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+from pymodbus.client import ModbusSerialClient as ModbusClient
 import numpy as np
 
 class Controller:
@@ -8,7 +8,7 @@ class Controller:
 
 		self._port = port
 
-		self.client = ModbusClient(method='rtu', port=self._port, baudrate=115200, timeout=1)
+		self.client = ModbusClient(method='rtu', port=self._port, baudrate=128000, timeout=1, strict = False)
 
 		self.client.connect()
 
