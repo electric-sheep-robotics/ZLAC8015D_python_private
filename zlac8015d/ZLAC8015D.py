@@ -51,6 +51,14 @@ class Controller:
 		self.L_FAULT = 0x20A5
 		self.R_FAULT = 0x20A6
 
+		## Motor Status
+		self.BUS_VOLT = 0x20A1
+		self.STAT_WORD = 0x20A2
+		self.MOTOR_TEMP = 0x20A4
+		self.L_CURR = 0x20AD
+		self.R_CURR = 0x20AE
+		self.DRIVE_TEMP = 0x20B0
+
 		########################
 		## Control CMDs (REG) ##
 		########################
@@ -97,6 +105,12 @@ class Controller:
 		self.travel_in_one_rev = 0.655
 		self.cpr = 16385
 		self.R_Wheel = 0.105 #meter
+
+		###############
+		## Read Only ##
+		###############
+		
+
 
 	## Some time if read immediatly after write, it would show ModbusIOException when get data from registers
 	def modbus_fail_read_handler(self, ADDR, WORD):
@@ -341,3 +355,38 @@ class Controller:
 		r_tick = np.int32(((r_pul_hi & 0xFFFF) << 16) | (r_pul_lo & 0xFFFF))
 
 		return l_tick, r_tick
+
+	def get_bus_voltage(self):
+		# returns the input voltage
+		register = self.modbus_fail_read_handler(self.BUS_VOLT, 1) # uint16
+
+		bus_voltage = np.int16(register[0]) * 0.01 # each tick is 0.01V
+
+		return (bus_voltage)
+	
+	def get_motor_temp(self):
+		# returns motor temp in celsius
+		register = self.modbus_fail_read_handler(self.MOTOR_TEMP, 1) # uint16
+
+		left_motor_temp = np.int8(register[0] >> 8)
+		right_motor_temp = np.int8(register[0] & 0xFF)
+
+		return (left_motor_temp, right_motor_temp)
+	
+	def get_motor_current(self):
+		# returns the left motor current and right motor current in amps
+		register = self.modbus_fail_read_handler(self.L_CURR, 2) # int16
+
+		left_motor_current = np.int16(register[0]) * 0.1 # each tick is 0.1A
+		right_motor_current = np.int16(register[1]) * 0.1
+
+		return (left_motor_current, right_motor_current)
+
+	def get_driver_temp(self):
+		# returns the temperature of the motor driver in celsius
+		
+		register = self.modbus_fail_read_handler(self.DRIVE_TEMP, 1) # int16
+
+		driver_temp = np.int16(register[0]) * 0.1 # each tick is 0.1C
+
+		return (driver_temp)
